@@ -1,520 +1,536 @@
-import React, { useEffect, useRef, useState } from 'react';
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>靴診断 | 株式会社KID</title>
+  <meta name="description" content="お気に入りの靴を捨てる前に、プロの靴診断を。株式会社KIDがあなたの大切な一足をフィットさせます。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Noto+Serif+JP:wght@200;300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: #0f0e0d; color: #f0ece4; font-family: 'Noto Serif JP', serif; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0f0e0d; }
+    ::-webkit-scrollbar-thumb { background: #92400e; border-radius: 2px; }
 
-const RESERVE_URL = "https://ladieskid.jp/reserve_main";
+    .serif { font-family: 'Cormorant Garamond', 'Noto Serif JP', serif; }
 
-const SHOES = [
-  {
-    url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=900&auto=format&fit=crop",
-    caption: "思い出が詰まったパンプス"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=900&auto=format&fit=crop",
-    caption: "見つけた瞬間に運命を感じた一足"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=900&auto=format&fit=crop",
-    caption: "もう二度と出会えないデザイン"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=900&auto=format&fit=crop",
-    caption: "大切なコレクションの一足"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=900&auto=format&fit=crop",
-    caption: "あなたと歩き続けたい靴"
-  },
-];
+    /* ── FADE IN ── */
+    .fade-in { opacity: 0; transform: translateY(32px); transition: opacity 0.85s ease, transform 0.85s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .fade-in[data-delay="1"] { transition-delay: 0.1s; }
+    .fade-in[data-delay="2"] { transition-delay: 0.2s; }
+    .fade-in[data-delay="3"] { transition-delay: 0.35s; }
+    .fade-in[data-delay="4"] { transition-delay: 0.5s; }
+    .fade-in[data-delay="5"] { transition-delay: 0.15s; }
+    .fade-in[data-delay="6"] { transition-delay: 0.25s; }
+    .fade-in[data-delay="7"] { transition-delay: 0.35s; }
 
-function useInView(threshold = 0.15) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) setVisible(true); },
-      { threshold }
-    );
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-  return [ref, visible];
-}
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: background 0.4s, backdrop-filter 0.4s, border-color 0.4s;
+      border-bottom: 1px solid transparent;
+    }
+    header.scrolled {
+      background: rgba(15,14,13,0.92);
+      backdrop-filter: blur(12px);
+      border-color: rgba(255,255,255,0.06);
+    }
+    .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 300; letter-spacing: 0.3em; color: #f0ece4; }
+    .logo span { font-size: 0.65rem; letter-spacing: 0.15em; color: #a78060; margin-left: 0.8rem; font-family: 'Noto Serif JP'; font-weight: 300; }
 
-function FadeIn({ children, delay = 0, className = "" }) {
-  const [ref, visible] = useInView();
-  return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(32px)',
-        transition: `opacity 0.85s ease ${delay}s, transform 0.85s ease ${delay}s`,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+    /* ── BUTTONS ── */
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #92400e; color: #fff;
+      padding: 1.1rem 2.8rem; border-radius: 100px;
+      font-family: 'Noto Serif JP', serif; font-size: 1rem;
+      font-weight: 500; letter-spacing: 0.1em; text-decoration: none;
+      transition: all 0.35s ease; border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .cta-btn:hover { background: transparent; border-color: #92400e; color: #d97706; transform: translateY(-2px); }
+    .cta-btn-sm { padding: 0.65rem 1.6rem; font-size: 0.82rem; }
+    .cta-btn-lg { font-size: 1.1rem; padding: 1.3rem 3.5rem; }
 
-function ShoeCarousel() {
-  const [active, setActive] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setActive(p => (p + 1) % SHOES.length), 3800);
-    return () => clearInterval(t);
-  }, []);
-  return (
-    <div style={{ position: 'relative', width: '100%', aspectRatio: '4/5', borderRadius: '2rem', overflow: 'hidden' }}>
-      {SHOES.map((s, i) => (
-        <div
-          key={i}
-          style={{
-            position: 'absolute', inset: 0,
-            opacity: i === active ? 1 : 0,
-            transition: 'opacity 1.2s ease',
-          }}
-        >
-          <img src={s.url} alt={s.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)',
-            padding: '2rem 1.5rem 1.5rem',
-          }}>
-            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', letterSpacing: '0.12em', fontStyle: 'italic' }}>
-              {s.caption}
-            </p>
-          </div>
+    /* ── GOLD LINE ── */
+    .gold-line { width: 48px; height: 2px; background: linear-gradient(90deg, #92400e, #d97706); border-radius: 1px; margin: 0 auto; }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 6rem 2rem 4rem;
+      position: relative; overflow: hidden;
+    }
+    #hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(92,40,10,0.25) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-inner { max-width: 1100px; margin: 0 auto; width: 100%; display: flex; gap: 4rem; align-items: center; }
+    .hero-text { flex: 1; min-width: 0; }
+    .badge {
+      display: inline-block; font-size: 0.72rem; letter-spacing: 0.3em;
+      color: #d97706; border: 1px solid rgba(217,119,6,0.4);
+      padding: 0.4rem 1rem; border-radius: 100px; margin-bottom: 2.5rem;
+    }
+    .hero-text h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 300; line-height: 1.4; letter-spacing: 0.04em; margin-bottom: 2rem; color: #f5f0e8; }
+    .hero-text h1 em { font-style: italic; color: #d97706; }
+    .hero-divider { width: 40px; height: 1px; background: rgba(217,119,6,0.6); margin-bottom: 1.8rem; }
+    .hero-text p { font-size: 1rem; line-height: 2.1; letter-spacing: 0.08em; color: #b5a898; margin-bottom: 2.8rem; font-weight: 300; }
+    .hero-cta-wrap { display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
+    .hero-note { font-size: 0.78rem; color: #6b5e52; letter-spacing: 0.1em; }
+    .hero-carousel { flex: 0 0 min(420px, 100%); width: min(420px, 100%); }
+
+    /* ── CAROUSEL ── */
+    .carousel { position: relative; width: 100%; aspect-ratio: 4/5; border-radius: 2rem; overflow: hidden; }
+    .carousel-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
+    .carousel-slide.active { opacity: 1; }
+    .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+    .carousel-caption {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+      padding: 2rem 1.5rem 1.5rem;
+    }
+    .carousel-caption p { color: rgba(255,255,255,0.85); font-size: 0.85rem; letter-spacing: 0.12em; font-style: italic; }
+    .carousel-dots { position: absolute; bottom: 1rem; right: 1rem; display: flex; gap: 6px; }
+    .carousel-dot {
+      height: 6px; border-radius: 3px; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.4); width: 6px; transition: all 0.4s ease;
+    }
+    .carousel-dot.active { background: #d97706; width: 24px; }
+
+    /* ── STORY ── */
+    #story { padding: 7rem 2rem; background: #100f0d; position: relative; overflow: hidden; text-align: center; }
+    #story::before {
+      content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(92,40,10,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .story-inner { max-width: 800px; margin: 0 auto; position: relative; }
+    .story-inner h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 4vw, 3.2rem); font-weight: 300; line-height: 1.7; letter-spacing: 0.06em; color: #f0ece4; margin-bottom: 3rem; }
+    .story-inner h2 em { color: #d97706; font-style: italic; }
+    .story-sub { font-size: 1.05rem; line-height: 2.3; letter-spacing: 0.1em; color: #8a7a6e; font-weight: 300; margin-bottom: 4rem; }
+    .story-box {
+      margin: 0 auto 4rem; max-width: 600px; padding: 3rem 2rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .story-box p { font-size: 1.1rem; line-height: 2.4; letter-spacing: 0.1em; color: #c4b5a5; font-weight: 300; }
+    .story-box strong { color: #f0ece4; font-weight: 400; }
+    .story-close { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.4rem, 3vw, 2rem); font-style: italic; color: #d97706; letter-spacing: 0.05em; line-height: 1.8; }
+
+    /* ── PHOTO GRID ── */
+    #photo-grid { padding: 5rem 2rem; background: #0f0e0d; }
+    .photo-grid-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 2rem; align-items: stretch; }
+    .photo-col-a { flex: 1; display: flex; flex-direction: column; gap: 2rem; }
+    .photo-col-b { flex: 1.2; display: flex; flex-direction: column; gap: 2rem; }
+    .photo-rounded { border-radius: 1.5rem; overflow: hidden; }
+    .photo-rounded img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85); display: block; transition: transform 0.7s ease, filter 0.5s ease; }
+    .photo-rounded img:hover { transform: scale(1.04); filter: brightness(0.95); }
+    .photo-rounded.ratio-34 { aspect-ratio: 3/4; }
+    .photo-rounded.ratio-169 { aspect-ratio: 16/9; }
+    .photo-rounded.ratio-43 { aspect-ratio: 4/3; }
+    .photo-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 1.2rem; padding: 2rem; }
+    .photo-card .quote { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 300; font-style: italic; color: #d97706; margin-bottom: 1rem; }
+    .photo-card p { font-size: 0.9rem; color: #8a7a6e; line-height: 1.9; letter-spacing: 0.06em; font-weight: 300; }
+    .photo-text-block { padding: 2rem 0; }
+    .photo-text-block h3 { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 300; line-height: 1.6; color: #f0ece4; margin-bottom: 1.5rem; }
+    .photo-text-block h3 em { color: #d97706; font-style: italic; }
+    .photo-text-block p { font-size: 0.95rem; line-height: 2.2; color: #8a7a6e; letter-spacing: 0.08em; font-weight: 300; }
+
+    /* ── PROBLEMS ── */
+    #problems { padding: 7rem 2rem; background: #13110f; }
+    .problems-inner { max-width: 900px; margin: 0 auto; }
+    .section-head { text-align: center; margin-bottom: 4rem; }
+    .section-head .gold-line { margin-bottom: 1.5rem; }
+    .section-head h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.6rem, 3.5vw, 2.8rem); font-weight: 300; letter-spacing: 0.06em; color: #f0ece4; line-height: 1.6; }
+    .section-head h2 em { color: #d97706; font-style: italic; }
+    .problems-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .problem-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 1rem; padding: 1.5rem; transition: border-color 0.3s, background 0.3s; }
+    .problem-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(146,64,14,0.4); }
+    .problem-card .em { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-style: italic; color: #d97706; margin-bottom: 0.8rem; font-weight: 400; }
+    .problem-card p { font-size: 0.9rem; color: #8a7a6e; line-height: 1.9; font-weight: 300; letter-spacing: 0.06em; }
+
+    /* ── FEATURES ── */
+    #features { padding: 7rem 2rem; background: #0f0e0d; }
+    .features-inner { max-width: 1100px; margin: 0 auto; }
+    .features-grid { display: flex; gap: 2rem; }
+    .feature-item { flex: 1; }
+    .feature-img { border-radius: 1.5rem; overflow: hidden; aspect-ratio: 4/3; margin-bottom: 1.5rem; }
+    .feature-img img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.75); transition: transform 0.7s ease, filter 0.5s ease; display: block; }
+    .feature-img img:hover { transform: scale(1.05); filter: brightness(0.9); }
+    .feature-body { display: flex; gap: 1rem; align-items: flex-start; }
+    .feature-num { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; color: rgba(217,119,6,0.3); line-height: 1; flex-shrink: 0; }
+    .feature-body h3 { font-size: 1.1rem; font-weight: 500; color: #f0ece4; margin-bottom: 0.6rem; letter-spacing: 0.05em; }
+    .feature-body p { font-size: 0.88rem; color: #8a7a6e; line-height: 2; font-weight: 300; letter-spacing: 0.05em; }
+
+    /* ── MID CTA ── */
+    #mid-cta {
+      padding: 6rem 2rem; text-align: center; position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #1a0e08 0%, #0f0e0d 50%, #1a0e08 100%);
+    }
+    #mid-cta::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(146,64,14,0.2) 0%, transparent 70%); pointer-events: none; }
+    .mid-cta-inner { position: relative; z-index: 1; }
+    #mid-cta .quote { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 300; font-style: italic; color: #d97706; margin-bottom: 1rem; line-height: 1.5; }
+    #mid-cta p { font-size: 1.1rem; color: #b5a898; margin-bottom: 3rem; letter-spacing: 0.1em; line-height: 2; font-weight: 300; }
+
+    /* ── FLOW ── */
+    #flow { padding: 7rem 2rem; background: #0f0e0d; }
+    .flow-inner { max-width: 700px; margin: 0 auto; }
+    .steps { display: flex; flex-direction: column; }
+    .step-item {
+      display: flex; gap: 1.5rem; align-items: flex-start; padding: 1.5rem;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      transition: all 0.3s;
+    }
+    .step-item:first-child { border-radius: 1rem 1rem 0 0; }
+    .step-item:last-child { border-radius: 0 0 1rem 1rem; }
+    .step-item + .step-item { border-top: none; }
+    .step-item:hover { background: rgba(146,64,14,0.08); border-color: rgba(146,64,14,0.3); }
+    .step-num {
+      flex-shrink: 0; width: 3rem; height: 3rem; border-radius: 50%;
+      border: 1px solid rgba(217,119,6,0.5);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-num span { font-family: 'Cormorant Garamond', serif; font-size: 0.75rem; color: #d97706; font-weight: 400; }
+    .step-text strong { font-size: 1rem; font-weight: 500; color: #f0ece4; display: block; margin-bottom: 0.3rem; letter-spacing: 0.05em; }
+    .step-text p { font-size: 0.85rem; color: #6b5e52; letter-spacing: 0.06em; line-height: 1.8; font-weight: 300; }
+
+    /* ── FINAL CTA ── */
+    #final-cta { padding: 8rem 2rem; background: #13110f; text-align: center; position: relative; overflow: hidden; }
+    .final-bg { position: absolute; inset: 0; }
+    .final-bg img { width: 100%; height: 100%; object-fit: cover; opacity: 0.06; }
+    .final-inner { position: relative; z-index: 1; }
+    #final-cta h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 5vw, 4rem); font-weight: 300; line-height: 1.5; letter-spacing: 0.05em; color: #f5f0e8; margin-bottom: 2rem; }
+    #final-cta h2 em { color: #d97706; font-style: italic; }
+    #final-cta .body { font-size: 1rem; line-height: 2.5; color: #8a7a6e; max-width: 520px; margin: 0 auto 3.5rem; letter-spacing: 0.1em; font-weight: 300; }
+    .final-note { font-size: 0.78rem; color: #4a3e34; letter-spacing: 0.12em; margin-top: 1.2rem; }
+
+    /* ── FOOTER ── */
+    footer { background: #080705; padding: 2.5rem 2rem; border-top: 1px solid rgba(255,255,255,0.05); }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 300; letter-spacing: 0.3em; color: #4a3e34; }
+    .footer-links { display: flex; gap: 2rem; }
+    .footer-links a { font-size: 0.78rem; color: #4a3e34; text-decoration: none; letter-spacing: 0.08em; transition: color 0.3s; }
+    .footer-links a:hover { color: #d97706; }
+    footer p { font-size: 0.75rem; color: #3a302a; letter-spacing: 0.08em; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hero-inner { flex-direction: column; }
+      .hero-carousel { width: 100%; }
+      .photo-grid-inner { flex-direction: column; }
+      .features-grid { flex-direction: column; }
+      .footer-inner { flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header id="site-header">
+    <div class="logo">KID <span>靴診断</span></div>
+    <a href="https://ladieskid.jp/reserve_main" target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-sm">予約する →</a>
+  </header>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="badge fade-in">SHOE FITTING DIAGNOSIS</div>
+        <h1 class="fade-in" data-delay="1">
+          捨てないで。<br>
+          <em>その一足</em>にはまだ続きがある。
+        </h1>
+        <div class="hero-divider fade-in" data-delay="2"></div>
+        <p class="fade-in" data-delay="2">
+          もう二度と出会えないこの靴だから捨てられない。痛くても大切だから諦めたくない。株式会社KIDがその想いをフィットに変えます。
+        </p>
+        <div class="hero-cta-wrap fade-in" data-delay="3">
+          <a href="https://ladieskid.jp/reserve_main" target="_blank" rel="noopener noreferrer" class="cta-btn">その靴を診断してもらう →</a>
+          <span class="hero-note">▸ WEB予約 24時間受付中</span>
         </div>
-      ))}
-      <div style={{
-        position: 'absolute', bottom: '1rem', right: '1rem',
-        display: 'flex', gap: '6px',
-      }}>
-        {SHOES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            style={{
-              width: i === active ? '24px' : '6px',
-              height: '6px',
-              borderRadius: '3px',
-              background: i === active ? '#d97706' : 'rgba(255,255,255,0.4)',
-              border: 'none', cursor: 'pointer',
-              transition: 'all 0.4s ease',
-            }}
-          />
-        ))}
+      </div>
+      <div class="hero-carousel fade-in" data-delay="2">
+        <div class="carousel" id="carousel">
+          <div class="carousel-slide active">
+            <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=900&auto=format&fit=crop" alt="思い出が詰まったパンプス" loading="lazy" />
+            <div class="carousel-caption"><p>思い出が詰まったパンプス</p></div>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=900&auto=format&fit=crop" alt="見つけた瞬間に運命を感じた一足" loading="lazy" />
+            <div class="carousel-caption"><p>見つけた瞬間に運命を感じた一足</p></div>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=900&auto=format&fit=crop" alt="もう二度と出会えないデザイン" loading="lazy" />
+            <div class="carousel-caption"><p>もう二度と出会えないデザイン</p></div>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=900&auto=format&fit=crop" alt="大切なコレクションの一足" loading="lazy" />
+            <div class="carousel-caption"><p>大切なコレクションの一足</p></div>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=900&auto=format&fit=crop" alt="あなたと歩き続けたい靴" loading="lazy" />
+            <div class="carousel-caption"><p>あなたと歩き続けたい靴</p></div>
+          </div>
+          <div class="carousel-dots" id="carousel-dots"></div>
+        </div>
       </div>
     </div>
-  );
-}
+  </section>
 
-export default function App() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  return (
-    <div style={{ fontFamily: "'Georgia', 'Noto Serif JP', serif", background: '#0f0e0d', color: '#f0ece4', minHeight: '100vh' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Noto+Serif+JP:wght@200;300;400;500&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { overflow-x: hidden; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #0f0e0d; }
-        ::-webkit-scrollbar-thumb { background: #92400e; border-radius: 2px; }
-        .serif { font-family: 'Cormorant Garamond', 'Noto Serif JP', serif; }
-        .jp { font-family: 'Noto Serif JP', serif; }
-        .cta-btn {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: #92400e; color: #fff;
-          padding: 1.1rem 2.8rem; border-radius: 100px;
-          font-family: 'Noto Serif JP', serif; font-size: 1rem;
-          font-weight: 500; letter-spacing: 0.1em; text-decoration: none;
-          transition: all 0.35s ease; border: 1px solid transparent;
-          cursor: pointer;
-        }
-        .cta-btn:hover { background: transparent; border-color: #92400e; color: #d97706; transform: translateY(-2px); }
-        .cta-btn-light {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: #f0ece4; color: #1c1008;
-          padding: 1.1rem 2.8rem; border-radius: 100px;
-          font-family: 'Noto Serif JP', serif; font-size: 1rem;
-          font-weight: 500; letter-spacing: 0.1em; text-decoration: none;
-          transition: all 0.35s ease;
-        }
-        .cta-btn-light:hover { background: #d97706; color: #fff; transform: translateY(-2px); }
-        .gold-line { width: 48px; height: 2px; background: linear-gradient(90deg, #92400e, #d97706); border-radius: 1px; }
-        .problem-card {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 1rem;
-          padding: 1.5rem;
-          transition: border-color 0.3s, background 0.3s;
-        }
-        .problem-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(146,64,14,0.4); }
-        .step-item {
-          display: flex; gap: 1.5rem; align-items: flex-start;
-          padding: 1.5rem;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.06);
-          border-radius: 1rem;
-          transition: all 0.3s;
-        }
-        .step-item:hover { background: rgba(146,64,14,0.08); border-color: rgba(146,64,14,0.3); }
-        @media (max-width: 768px) {
-          .hero-grid { flex-direction: column !important; }
-          .features-grid { flex-direction: column !important; }
-          .story-row { flex-direction: column !important; }
-          .footer-inner { flex-direction: column !important; text-align: center; }
-        }
-      `}</style>
-
-      {/* ── HEADER ── */}
-      <header style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        padding: '1rem 2rem',
-        background: scrolled ? 'rgba(15,14,13,0.92)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : 'none',
-        transition: 'all 0.4s ease',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
-        <div className="serif" style={{ fontSize: '1.5rem', fontWeight: 300, letterSpacing: '0.3em', color: '#f0ece4' }}>
-          KID
-          <span style={{ fontSize: '0.65rem', letterSpacing: '0.15em', color: '#a78060', marginLeft: '0.8rem', fontFamily: 'Noto Serif JP', fontWeight: 300 }}>
-            靴診断
-          </span>
-        </div>
-        <a href={RESERVE_URL} target="_blank" rel="noopener noreferrer" className="cta-btn" style={{ padding: '0.65rem 1.6rem', fontSize: '0.82rem' }}>
-          予約する →
-        </a>
-      </header>
-
-      {/* ── HERO ── */}
-      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '5rem', paddingBottom: '4rem', position: 'relative', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 70% 50%, rgba(92,40,10,0.25) 0%, transparent 65%)',
-          pointerEvents: 'none',
-        }} />
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem', width: '100%' }}>
-          <div className="hero-grid" style={{ display: 'flex', gap: '4rem', alignItems: 'center' }}>
-            
-            {/* Left */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                display: 'inline-block',
-                fontSize: '0.72rem', letterSpacing: '0.3em',
-                color: '#d97706', border: '1px solid rgba(217,119,6,0.4)',
-                padding: '0.4rem 1rem', borderRadius: '100px', marginBottom: '2.5rem',
-                fontFamily: 'Noto Serif JP',
-              }}>
-                SHOE FITTING DIAGNOSIS
-              </div>
-
-              <h1 className="serif" style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)', fontWeight: 300, lineHeight: 1.4, letterSpacing: '0.04em', marginBottom: '2rem', color: '#f5f0e8' }}>
-                捨てないで。<br />
-                <em style={{ fontStyle: 'italic', color: '#d97706' }}>その一足</em>にはまだ続きがある。
-              </h1>
-
-              <div style={{ width: '40px', height: '1px', background: 'rgba(217,119,6,0.6)', marginBottom: '1.8rem' }} />
-
-              <p className="jp" style={{ fontSize: '1rem', lineHeight: 2.1, letterSpacing: '0.08em', color: '#b5a898', marginBottom: '2.8rem', fontWeight: 300 }}>
-                もう二度と出会えないこの靴だから捨てられない。痛くても大切だから諦めたくない。株式会社KIDがその想いをフィットに変えます。
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
-                <a href={RESERVE_URL} target="_blank" rel="noopener noreferrer" className="cta-btn" style={{ fontSize: '1rem' }}>
-                  その靴を診断してもらう →
-                </a>
-                <p className="jp" style={{ fontSize: '0.78rem', color: '#6b5e52', letterSpacing: '0.1em' }}>
-                  ▸ WEB予約 24時間受付中
-                </p>
-              </div>
-            </div>
-
-            {/* Right - Carousel */}
-            <div style={{ flex: '0 0 min(420px, 100%)', width: 'min(420px, 100%)' }}>
-              <ShoeCarousel />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── EMOTIONAL STORY ── */}
-      <section style={{ padding: '7rem 2rem', background: '#100f0d', position: 'relative', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)',
-          width: '600px', height: '600px',
-          background: 'radial-gradient(circle, rgba(92,40,10,0.15) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-          
-          <FadeIn>
-            <div className="gold-line" style={{ margin: '0 auto 3rem' }} />
-            <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 4vw, 3.2rem)', fontWeight: 300, lineHeight: 1.7, letterSpacing: '0.06em', color: '#f0ece4' }}>
-              「この靴じゃなきゃ、<em style={{ color: '#d97706', fontStyle: 'italic' }}>ダメなんです。</em>」
-            </h2>
-          </FadeIn>
-
-          <FadeIn delay={0.2}>
-            <p className="jp" style={{ marginTop: '3rem', fontSize: '1.05rem', lineHeight: 2.3, letterSpacing: '0.1em', color: '#8a7a6e', fontWeight: 300 }}>
-              星の数ほどある靴の中でビビッときた。手が止まった。試着した瞬間「これだ」と思った。
-            </p>
-          </FadeIn>
-
-          <FadeIn delay={0.35}>
-            <div style={{ margin: '4rem auto', maxWidth: '600px', padding: '3rem 2rem', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="jp" style={{ fontSize: '1.1rem', lineHeight: 2.4, letterSpacing: '0.1em', color: '#c4b5a5', fontWeight: 300 }}>
-                でも履くたびに少し痛い。気づけば下駄箱の奥に眠っている。
-                <br /><br />
-                <strong style={{ color: '#f0ece4', fontWeight: 400 }}>捨てようとしたことも何度もあった。</strong>
-                <br /><br />
-                それでもできなかったのは「もう二度と出会えない」とわかっているから。
-              </p>
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.5}>
-            <p className="serif" style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontStyle: 'italic', color: '#d97706', letterSpacing: '0.05em', lineHeight: 1.8 }}>
-              その靴への愛をKIDが正しく形にします。
-            </p>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* ── PHOTO STORY GRID ── */}
-      <section style={{ padding: '5rem 2rem', background: '#0f0e0d' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div className="story-row" style={{ display: 'flex', gap: '2rem', alignItems: 'stretch' }}>
-            
-            <FadeIn className="" style={{ flex: 1 }} delay={0}>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem', opacity: 1 }}>
-                <div style={{ borderRadius: '1.5rem', overflow: 'hidden', aspectRatio: '3/4' }}>
-                  <img src="https://images.unsplash.com/photo-1515347619362-74efddb9554a?q=80&w=900&auto=format&fit=crop" alt="大切に手入れされる靴" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.85)' }} />
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '1.2rem', padding: '2rem' }}>
-                  <p className="serif" style={{ fontSize: '1.5rem', fontWeight: 300, fontStyle: 'italic', color: '#d97706', marginBottom: '1rem' }}>
-                    "It still fits my memories."
-                  </p>
-                  <p className="jp" style={{ fontSize: '0.9rem', color: '#8a7a6e', lineHeight: 1.9, fontWeight: 300, letterSpacing: '0.06em' }}>
-                    記憶に合った靴ほど体には合っていないことがある。それでもその靴には確かな価値がある。
-                  </p>
-                </div>
-              </div>
-            </FadeIn>
-
-            <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <FadeIn delay={0.15}>
-                <div style={{ borderRadius: '1.5rem', overflow: 'hidden', aspectRatio: '16/9' }}>
-                  <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=900&auto=format&fit=crop" alt="靴コレクション" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.8)' }} />
-                </div>
-              </FadeIn>
-              <FadeIn delay={0.25}>
-                <div style={{ padding: '2rem 0' }}>
-                  <h3 className="serif" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, lineHeight: 1.6, color: '#f0ece4', marginBottom: '1.5rem' }}>
-                    フィットすれば<em style={{ color: '#d97706', fontStyle: 'italic' }}>その靴は甦る。</em>
-                  </h3>
-                  <p className="jp" style={{ fontSize: '0.95rem', lineHeight: 2.2, color: '#8a7a6e', letterSpacing: '0.08em', fontWeight: 300 }}>
-                    プロの目で足の特徴を正確に把握しその場で靴を調整します。捨てなくてよかったと思える瞬間をご一緒に。
-                  </p>
-                </div>
-              </FadeIn>
-              <FadeIn delay={0.35}>
-                <div style={{ borderRadius: '1.5rem', overflow: 'hidden', aspectRatio: '4/3' }}>
-                  <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=900&auto=format&fit=crop" alt="靴の調整" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.8)' }} />
-                </div>
-              </FadeIn>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PROBLEMS ── */}
-      <section style={{ padding: '7rem 2rem', background: '#13110f' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <FadeIn>
-            <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-              <div className="gold-line" style={{ margin: '0 auto 1.5rem' }} />
-              <h2 className="serif" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.8rem)', fontWeight: 300, letterSpacing: '0.06em', color: '#f0ece4', lineHeight: 1.6 }}>
-                「愛してるのに<em style={{ color: '#d97706', fontStyle: 'italic' }}>履けない</em>」その葛藤、わかります。
-              </h2>
-            </div>
-          </FadeIn>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-            {[
-              { em: "捨てられない", text: "高価だったから・デザインが好きだから・思い出があるから" },
-              { em: "履けない", text: "痛くて出番がない。下駄箱に眠ったまま数年が経つ" },
-              { em: "わからない", text: "今の靴が自分の足に本当に合っているのか判断できない" },
-              { em: "繰り返す", text: "靴擦れ・タコ・外反母趾など、足のトラブルが続いている" },
-            ].map((item, i) => (
-              <FadeIn key={i} delay={i * 0.1}>
-                <div className="problem-card">
-                  <p className="serif" style={{ fontSize: '1.3rem', fontStyle: 'italic', color: '#d97706', marginBottom: '0.8rem', fontWeight: 400 }}>
-                    "{item.em}"
-                  </p>
-                  <p className="jp" style={{ fontSize: '0.9rem', color: '#8a7a6e', lineHeight: 1.9, fontWeight: 300, letterSpacing: '0.06em' }}>
-                    {item.text}
-                  </p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES ── */}
-      <section style={{ padding: '7rem 2rem', background: '#0f0e0d' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <FadeIn>
-            <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-              <div className="gold-line" style={{ margin: '0 auto 1.5rem' }} />
-              <h2 className="serif" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.8rem)', fontWeight: 300, letterSpacing: '0.06em', color: '#f0ece4' }}>
-                KIDの靴診断が選ばれる理由
-              </h2>
-            </div>
-          </FadeIn>
-          <div className="features-grid" style={{ display: 'flex', gap: '2rem' }}>
-            {[
-              {
-                img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
-                num: "01",
-                title: "すべての靴が対象",
-                body: "パンプスからスニーカー、ブーツまで。下駄箱にあるすべての靴をお持ちください。複数足での来店も歓迎します。"
-              },
-              {
-                img: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=800&auto=format&fit=crop",
-                num: "02",
-                title: "プロがその場で調整",
-                body: "診断で終わりではありません。独自技術で即日フィット調整。持参したその靴を、快適な状態でお返しします。"
-              },
-              {
-                img: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=800&auto=format&fit=crop",
-                num: "03",
-                title: "お気に入りが復活する",
-                body: "痛くて履けなかった大切な靴が、毎日履ける一足へ。捨てなくて良かった、と思える体験をご提供します。"
-              },
-            ].map((f, i) => (
-              <FadeIn key={i} delay={i * 0.15}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ borderRadius: '1.5rem', overflow: 'hidden', aspectRatio: '4/3', marginBottom: '1.5rem' }}>
-                    <img src={f.img} alt={f.title} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.75)', transition: 'transform 0.7s ease, filter 0.5s ease' }}
-                      onMouseEnter={e => { e.target.style.transform = 'scale(1.05)'; e.target.style.filter = 'brightness(0.9)'; }}
-                      onMouseLeave={e => { e.target.style.transform = 'scale(1)'; e.target.style.filter = 'brightness(0.75)'; }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                    <span className="serif" style={{ fontSize: '2.5rem', fontWeight: 300, color: 'rgba(217,119,6,0.3)', lineHeight: 1 }}>{f.num}</span>
-                    <div>
-                      <h3 className="jp" style={{ fontSize: '1.1rem', fontWeight: 500, color: '#f0ece4', marginBottom: '0.6rem', letterSpacing: '0.05em' }}>{f.title}</h3>
-                      <p className="jp" style={{ fontSize: '0.88rem', color: '#8a7a6e', lineHeight: 2, fontWeight: 300, letterSpacing: '0.05em' }}>{f.body}</p>
-                    </div>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── MID CTA ── */}
-      <section style={{ padding: '6rem 2rem', background: 'linear-gradient(135deg, #1a0e08 0%, #0f0e0d 50%, #1a0e08 100%)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 50%, rgba(146,64,14,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <FadeIn>
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <p className="serif" style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)', fontWeight: 300, fontStyle: 'italic', color: '#d97706', marginBottom: '1rem', lineHeight: 1.5 }}>
-              "この靴、どうにかしたい"
-            </p>
-            <p className="jp" style={{ fontSize: '1.1rem', color: '#b5a898', marginBottom: '3rem', letterSpacing: '0.1em', lineHeight: 2, fontWeight: 300 }}>
-              そう思ったらまず来てください。靴と足の状態を丁寧に診断しその場で調整します。
-            </p>
-            <a href={RESERVE_URL} target="_blank" rel="noopener noreferrer" className="cta-btn" style={{ fontSize: '1.05rem', padding: '1.2rem 3rem' }}>
-              大切な靴を持って、来店予約する →
-            </a>
-          </div>
-        </FadeIn>
-      </section>
-
-      {/* ── FLOW ── */}
-      <section style={{ padding: '7rem 2rem', background: '#0f0e0d' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <FadeIn>
-            <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-              <div className="gold-line" style={{ margin: '0 auto 1.5rem' }} />
-              <h2 className="serif" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.4rem)', fontWeight: 300, letterSpacing: '0.06em', color: '#f0ece4' }}>
-                ご利用の流れ
-              </h2>
-            </div>
-          </FadeIn>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-            {[
-              { n: "01", t: "WEBからご予約", d: "24時間いつでも、スマホから簡単にご予約いただけます" },
-              { n: "02", t: "診断したい靴をご持参", d: "複数足OK。気になる靴はすべてお持ちください" },
-              { n: "03", t: "プロによる足と靴の診断", d: "足の特徴を正確に計測し、靴との相性を丁寧に確認します" },
-              { n: "04", t: "その場でフィット調整", d: "独自技術でフィット感を即日改善します" },
-              { n: "05", t: "快適になった靴でお帰りを", d: "そのままお帰りいただけます。捨てなくて良かったと感じる瞬間" },
-            ].map((s, i) => (
-              <FadeIn key={i} delay={i * 0.1}>
-                <div className="step-item" style={{ borderRadius: i === 0 ? '1rem 1rem 0 0' : i === 4 ? '0 0 1rem 1rem' : '0', marginTop: i > 0 ? '1px' : 0 }}>
-                  <div style={{ flexShrink: 0, width: '3rem', height: '3rem', borderRadius: '50%', border: '1px solid rgba(217,119,6,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span className="serif" style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 400 }}>{s.n}</span>
-                  </div>
-                  <div>
-                    <p className="jp" style={{ fontSize: '1rem', fontWeight: 500, color: '#f0ece4', marginBottom: '0.3rem', letterSpacing: '0.05em' }}>{s.t}</p>
-                    <p className="jp" style={{ fontSize: '0.85rem', color: '#6b5e52', letterSpacing: '0.06em', lineHeight: 1.8, fontWeight: 300 }}>{s.d}</p>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FINAL CTA ── */}
-      <section style={{ padding: '8rem 2rem', background: '#13110f', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1800&auto=format&fit=crop" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.06 }} />
-        </div>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <FadeIn>
-            <div className="gold-line" style={{ margin: '0 auto 3rem' }} />
-            <h2 className="serif" style={{ fontSize: 'clamp(2rem, 5vw, 4rem)', fontWeight: 300, lineHeight: 1.5, letterSpacing: '0.05em', color: '#f5f0e8', marginBottom: '2rem' }}>
-              もう一度<em style={{ color: '#d97706', fontStyle: 'italic' }}>あの靴と歩こう。</em>
-            </h2>
-            <p className="jp" style={{ fontSize: '1rem', lineHeight: 2.5, color: '#8a7a6e', maxWidth: '520px', margin: '0 auto 3.5rem', letterSpacing: '0.1em', fontWeight: 300 }}>
-              毎日を共にする靴だから妥協しないでほしい。足元が変われば日常が変わります。株式会社KIDがその大切な一足を救います。
-            </p>
-            <a href={RESERVE_URL} target="_blank" rel="noopener noreferrer" className="cta-btn" style={{ fontSize: '1.1rem', padding: '1.3rem 3.5rem', marginBottom: '1rem' }}>
-              靴診断の空き状況を確認する →
-            </a>
-            <p className="jp" style={{ fontSize: '0.78rem', color: '#4a3e34', letterSpacing: '0.12em', marginTop: '1.2rem' }}>
-              ▸ WEB予約 · 24時間受付 · 複数足OK
-            </p>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer style={{ background: '#080705', padding: '2.5rem 2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="footer-inner" style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-          <div className="serif" style={{ fontSize: '1.2rem', fontWeight: 300, letterSpacing: '0.3em', color: '#4a3e34' }}>KID</div>
-          <div style={{ display: 'flex', gap: '2rem' }}>
-            {["運営会社", "プライバシーポリシー"].map(t => (
-              <a key={t} href="#" className="jp" style={{ fontSize: '0.78rem', color: '#4a3e34', textDecoration: 'none', letterSpacing: '0.08em', transition: 'color 0.3s' }}
-                onMouseEnter={e => e.target.style.color = '#d97706'}
-                onMouseLeave={e => e.target.style.color = '#4a3e34'}
-              >{t}</a>
-            ))}
-          </div>
-          <p className="jp" style={{ fontSize: '0.75rem', color: '#3a302a', letterSpacing: '0.08em' }}>
-            &copy; {new Date().getFullYear()} 株式会社KID
-          </p>
-        </div>
-      </footer>
+  <!-- EMOTIONAL STORY -->
+  <section id="story">
+    <div class="story-inner">
+      <div class="gold-line fade-in" style="margin-bottom:3rem;"></div>
+      <h2 class="fade-in" data-delay="1">「この靴じゃなきゃ、<em>ダメなんです。</em>」</h2>
+      <p class="story-sub fade-in" data-delay="2">
+        星の数ほどある靴の中でビビッときた。手が止まった。試着した瞬間「これだ」と思った。
+      </p>
+      <div class="story-box fade-in" data-delay="3">
+        <p>
+          でも履くたびに少し痛い。気づけば下駄箱の奥に眠っている。
+          <br><br>
+          <strong>捨てようとしたことも何度もあった。</strong>
+          <br><br>
+          それでもできなかったのは「もう二度と出会えない」とわかっているから。
+        </p>
+      </div>
+      <p class="story-close fade-in" data-delay="4">その靴への愛をKIDが正しく形にします。</p>
     </div>
-  );
-}
+  </section>
+
+  <!-- PHOTO GRID -->
+  <section id="photo-grid">
+    <div class="photo-grid-inner">
+      <div class="photo-col-a">
+        <div class="photo-rounded ratio-34 fade-in">
+          <img src="https://images.unsplash.com/photo-1515347619362-74efddb9554a?q=80&w=900&auto=format&fit=crop" alt="大切に手入れされる靴" loading="lazy" />
+        </div>
+        <div class="photo-card fade-in" data-delay="1">
+          <p class="quote">"It still fits my memories."</p>
+          <p>記憶に合った靴ほど体には合っていないことがある。それでもその靴には確かな価値がある。</p>
+        </div>
+      </div>
+      <div class="photo-col-b">
+        <div class="photo-rounded ratio-169 fade-in" data-delay="5">
+          <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=900&auto=format&fit=crop" alt="靴コレクション" loading="lazy" />
+        </div>
+        <div class="photo-text-block fade-in" data-delay="6">
+          <h3>フィットすれば<em>その靴は甦る。</em></h3>
+          <p>プロの目で足の特徴を正確に把握しその場で靴を調整します。捨てなくてよかったと思える瞬間をご一緒に。</p>
+        </div>
+        <div class="photo-rounded ratio-43 fade-in" data-delay="7">
+          <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=900&auto=format&fit=crop" alt="靴の調整" loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEMS -->
+  <section id="problems">
+    <div class="problems-inner">
+      <div class="section-head fade-in">
+        <div class="gold-line"></div>
+        <h2>「愛してるのに<em>履けない</em>」その葛藤、わかります。</h2>
+      </div>
+      <div class="problems-grid">
+        <div class="problem-card fade-in">
+          <p class="em">"捨てられない"</p>
+          <p>高価だったから・デザインが好きだから・思い出があるから</p>
+        </div>
+        <div class="problem-card fade-in" data-delay="1">
+          <p class="em">"履けない"</p>
+          <p>痛くて出番がない。下駄箱に眠ったまま数年が経つ</p>
+        </div>
+        <div class="problem-card fade-in" data-delay="2">
+          <p class="em">"わからない"</p>
+          <p>今の靴が自分の足に本当に合っているのか判断できない</p>
+        </div>
+        <div class="problem-card fade-in" data-delay="3">
+          <p class="em">"繰り返す"</p>
+          <p>靴擦れ・タコ・外反母趾など足のトラブルが続いている</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="features-inner">
+      <div class="section-head fade-in" style="margin-bottom:5rem;">
+        <div class="gold-line"></div>
+        <h2>KIDの靴診断が選ばれる理由</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-item fade-in">
+          <div class="feature-img">
+            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop" alt="すべての靴が対象" loading="lazy" />
+          </div>
+          <div class="feature-body">
+            <span class="feature-num">01</span>
+            <div>
+              <h3>すべての靴が対象</h3>
+              <p>パンプスからスニーカー、ブーツまで。下駄箱にあるすべての靴をお持ちください。複数足での来店も歓迎します。</p>
+            </div>
+          </div>
+        </div>
+        <div class="feature-item fade-in" data-delay="1">
+          <div class="feature-img">
+            <img src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=800&auto=format&fit=crop" alt="プロがその場で調整" loading="lazy" />
+          </div>
+          <div class="feature-body">
+            <span class="feature-num">02</span>
+            <div>
+              <h3>プロがその場で調整</h3>
+              <p>診断で終わりではありません。独自技術で即日フィット調整。持参したその靴を快適な状態でお返しします。</p>
+            </div>
+          </div>
+        </div>
+        <div class="feature-item fade-in" data-delay="2">
+          <div class="feature-img">
+            <img src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=800&auto=format&fit=crop" alt="お気に入りが復活する" loading="lazy" />
+          </div>
+          <div class="feature-body">
+            <span class="feature-num">03</span>
+            <div>
+              <h3>お気に入りが復活する</h3>
+              <p>痛くて履けなかった大切な靴が毎日履ける一足へ。捨てなくて良かったと思える体験をご提供します。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MID CTA -->
+  <section id="mid-cta">
+    <div class="mid-cta-inner fade-in">
+      <p class="quote">"この靴、どうにかしたい"</p>
+      <p>そう思ったらまず来てください。靴と足の状態を丁寧に診断しその場で調整します。</p>
+      <a href="https://ladieskid.jp/reserve_main" target="_blank" rel="noopener noreferrer" class="cta-btn" style="font-size:1.05rem;padding:1.2rem 3rem;">大切な靴を持って、来店予約する →</a>
+    </div>
+  </section>
+
+  <!-- FLOW -->
+  <section id="flow">
+    <div class="flow-inner">
+      <div class="section-head fade-in">
+        <div class="gold-line"></div>
+        <h2 class="serif">ご利用の流れ</h2>
+      </div>
+      <div class="steps">
+        <div class="step-item fade-in">
+          <div class="step-num"><span>01</span></div>
+          <div class="step-text">
+            <strong>WEBからご予約</strong>
+            <p>24時間いつでもスマホから簡単にご予約いただけます</p>
+          </div>
+        </div>
+        <div class="step-item fade-in" data-delay="1">
+          <div class="step-num"><span>02</span></div>
+          <div class="step-text">
+            <strong>診断したい靴をご持参</strong>
+            <p>複数足OK。気になる靴はすべてお持ちください</p>
+          </div>
+        </div>
+        <div class="step-item fade-in" data-delay="2">
+          <div class="step-num"><span>03</span></div>
+          <div class="step-text">
+            <strong>プロによる足と靴の診断</strong>
+            <p>足の特徴を正確に計測し靴との相性を丁寧に確認します</p>
+          </div>
+        </div>
+        <div class="step-item fade-in" data-delay="3">
+          <div class="step-num"><span>04</span></div>
+          <div class="step-text">
+            <strong>その場でフィット調整</strong>
+            <p>独自技術でフィット感を即日改善します</p>
+          </div>
+        </div>
+        <div class="step-item fade-in" data-delay="4">
+          <div class="step-num"><span>05</span></div>
+          <div class="step-text">
+            <strong>快適になった靴でお帰りを</strong>
+            <p>そのままお帰りいただけます。捨てなくて良かったと感じる瞬間</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section id="final-cta">
+    <div class="final-bg">
+      <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1800&auto=format&fit=crop" alt="" loading="lazy" />
+    </div>
+    <div class="final-inner fade-in">
+      <div class="gold-line" style="margin-bottom:3rem;"></div>
+      <h2>もう一度<em>あの靴と歩こう。</em></h2>
+      <p class="body">毎日を共にする靴だから妥協しないでほしい。足元が変われば日常が変わります。株式会社KIDがその大切な一足を救います。</p>
+      <a href="https://ladieskid.jp/reserve_main" target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-lg">靴診断の空き状況を確認する →</a>
+      <p class="final-note">▸ WEB予約 · 24時間受付 · 複数足OK</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">KID</div>
+      <div class="footer-links">
+        <a href="#">運営会社</a>
+        <a href="#">プライバシーポリシー</a>
+      </div>
+      <p id="year-copy"></p>
+    </div>
+  </footer>
+
+  <script>
+    // 年号
+    document.getElementById('year-copy').textContent = '© ' + new Date().getFullYear() + ' 株式会社KID';
+
+    // スクロールヘッダー
+    const header = document.getElementById('site-header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // フェードイン
+    const fadeEls = document.querySelectorAll('.fade-in');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    fadeEls.forEach(el => observer.observe(el));
+
+    // カルーセル
+    const slides = document.querySelectorAll('.carousel-slide');
+    const dotsWrap = document.getElementById('carousel-dots');
+    let current = 0;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.addEventListener('click', () => goTo(i));
+      dotsWrap.appendChild(dot);
+    });
+
+    function goTo(n) {
+      slides[current].classList.remove('active');
+      dotsWrap.children[current].classList.remove('active');
+      current = n;
+      slides[current].classList.add('active');
+      dotsWrap.children[current].classList.add('active');
+    }
+
+    setInterval(() => goTo((current + 1) % slides.length), 3800);
+  </script>
+</body>
+</html>
